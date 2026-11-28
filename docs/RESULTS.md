@@ -279,3 +279,44 @@ Uncompressed baseline PPL — Wikipedia: `en = 9.35`, `es = 7.22`, `fi = 5.40`, 
 | `wiki_to_flores` (`joint`) | `es` | +4.12% | `+0.0504` (+9.5%) | `+0.0100` (+5.2%) | `+0.0090` (+5.1%) | `+0.0066` (+4.8%) |
 | `wiki_to_flores` (`joint`) | `fi` | +2.87% | `+0.2062` (+26.4%) | `+0.3955` (+52.8%) | **`+0.0091`** (+3.8%) | `+0.0023` (+3.1%) |
 | `wiki_to_flores` (`joint`) | `qu` | +2.48% | **`+0.3560`** (+46.3%) | `+0.2663` (+33.8%) | **`+0.0115`** (+3.7%) | **`+0.0062`** (+3.1%) |
+
+
+---
+
+## Week 7 — Downstream Evaluation Beyond Perplexity (`08_week7_downstream_eval.ipynb`)
+
+Calibrated **only on Wikipedia** (strict zero-leakage cross-domain evaluation), evaluated on both **`Qwen/Qwen3-1.7B`** and **`unsloth/Llama-3.2-3B`** under `V_late_head` (`layers 21–27`, `V`, `head`, `r = 0.25`) and `KV_full_joint` (`layers 3–27`, `K+V`, `joint`, `r = 0.25`, 4× full-model compression, `protect_pos0 = True`).
+
+### Task 1 — SIB-200 Topic Classification (7 classes, 204 parallel test examples/lang, 7-shot) — Accuracy (%)
+
+| Model | Regime | Target | Uncomp. | Matched | `en` basis | `multi_loo` | **`mix_5k`** | `multi` |
+|---|---|---|---:|---:|---:|---:|---:|---:|
+| `Qwen3-1.7B` | `V_late_head` | `en` / `es` / `fi` / `qu` | 75.0 / 75.5 / 74.0 / 44.6 | 80.4 / 80.9 / 77.9 / 49.0 | — / 79.4 / 76.0 / 47.5 | 82.4 / 80.9 / 77.5 / 51.5 | **81.9 / 81.4 / 78.9 / 51.5** | 82.8 / 81.9 / 77.9 / 51.0 |
+| `Qwen3-1.7B` | `KV_full_joint` | `en` / `es` / `fi` / `qu` | 75.0 / 75.5 / 74.0 / 44.6 | 72.5 / 58.3 / 57.4 / 35.8 | — / 70.6 / 60.3 / 38.7 | 58.3 / 64.2 / 60.3 / 37.7 | 66.7 / 64.7 / 60.3 / 37.3 | 65.2 / 65.7 / 57.4 / **40.7** |
+| `Llama-3.2-3B` | `V_late_head` | `en` / `es` / `fi` / `qu` | 77.5 / 78.4 / 77.5 / 56.9 | 70.6 / 73.0 / 78.4 / 51.0 | — / 73.5 / **72.1** / 51.5 | 76.5 / 77.0 / 76.5 / 51.5 | **76.5 / 77.0 / 79.9 / 52.5** | 74.5 / 78.4 / 78.9 / 51.5 |
+| `Llama-3.2-3B` | `KV_full_joint` | `en` / `es` / `fi` / `qu` | 77.5 / 78.4 / 77.5 / 56.9 | 81.9 / 83.8 / 77.0 / **33.3** | — / 82.4 / 77.5 / **35.3** | 79.4 / 77.5 / 80.4 / 47.5 | **78.4 / 78.4 / 80.4 / 52.0** | 79.9 / 79.4 / 81.4 / **51.0** |
+
+*Key paired bootstrap CIs:*
+- `Llama-3.2-3B`, `V_late_head`, `fi`: `en` vs matched = **`-6.37 pp`** `[-10.29, -2.94]` → recovered by `mix_5k` (`79.9%`).
+- `Llama-3.2-3B`, `KV_full_joint`, `qu`: both monolingual bases (`en`: `35.3%`, `qu`-only `matched`: `33.3%`) fail because the prompt is bilingual (English instructions/labels + Quechua text); **`mix_5k`** jumps to **`52.0%`** (**`+18.63 pp` over `matched`, `[+13.24, +24.51]`**).
+
+### Task 2 — FLORES-200 Autoregressive Machine Translation (`N = 80`, 5-shot, real `use_cache=True` decoding) — chrF++
+
+| Model | Regime | Direction | Uncomp. | Matched | `en` basis | `multi_loo` | **`mix_5k`** | `multi` |
+|---|---|---|---:|---:|---:|---:|---:|---:|
+| `Qwen3-1.7B` | `V_late_head` | `qu->es` | 27.52 | 26.38 | 27.03 | 26.84 | 26.83 | 26.79 |
+| `Qwen3-1.7B` | `V_late_head` | `fi->en` / `es->en` | 50.74 / 57.58 | 47.65 / 56.92 | 47.36 / 57.22 | 48.72 / 57.36 | 48.37 / 57.01 | 47.80 / 57.07 |
+| `Qwen3-1.7B` | **`KV_full_joint`** | **`qu->es`** | **27.52** | 21.04 | **13.26** *(-7.54 vs matched)* | 23.19 | **22.85** *(+9.6 over `en`)* | **22.94** |
+| `Qwen3-1.7B` | **`KV_full_joint`** | `fi->en` | 50.74 | 32.01 | **28.55** | 32.42 | **32.71** | **32.75** |
+| `Qwen3-1.7B` | **`KV_full_joint`** | `es->en` | 57.58 | 50.61 | **41.12** | 49.45 | **48.65** | **49.04** |
+| `Llama-3.2-3B` | `V_late_head` | `qu->es` | 27.47 | 26.70 | 27.33 | 26.64 | 27.48 | 27.47 |
+| `Llama-3.2-3B` | `V_late_head` | `fi->en` / `es->en` | 55.02 / 59.92 | 52.77 / 58.90 | 52.73 / 59.00 | 52.60 / 59.05 | 52.59 / 58.99 | 51.67 / 58.74 |
+| `Llama-3.2-3B` | **`KV_full_joint`** | **`qu->es`** | **27.47** | 20.66 | **14.01** | 23.12 | **24.14** *(+10.1 over `en`)* | **23.46** |
+| `Llama-3.2-3B` | **`KV_full_joint`** | **`es->qu`** | **19.98** | 16.59 | **10.26** | 16.19 | **14.90** *(+4.6 over `en`)* | 14.58 |
+| `Llama-3.2-3B` | **`KV_full_joint`** | **`fi->en`** | **55.02** | 33.17 | **29.63** | 37.38 | **38.58** *(+9.0 over `en`)* | **38.73** |
+| `Llama-3.2-3B` | **`KV_full_joint`** | `es->en` | 59.92 | 42.32 | **42.23** | 46.31 | **46.17** | **47.25** |
+
+### Qualitative Failure Mode under English-Only Calibration (`qu -> es`, `KV_full_joint`)
+English-calibrated 4× KV-cache compression causes **literal language-collapse into English** during Quechua→Spanish autoregressive generation in **both** models, whereas `mix_5k` preserves Spanish output and named entities:
+- **Qwen3-1.7B (`KV_full | en`):** `"The pilot was the first to be identified in the world, and the first to be identified..."` → **`KV_full | mix_5k`:** `"El Dr. Ehud Ur, el director de la escuela de medicina..."`
+- **Llama-3.2-3B (`KV_full | en`):** `"Dr. Ehud Ur, yachachiq of the Dalhosie Suntur, was appointed as the new director..."` → **`KV_full | mix_5k`:** `"Dr. Ehud Ur, el director de la escuela de medicina..."`
