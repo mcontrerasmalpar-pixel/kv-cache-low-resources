@@ -85,8 +85,12 @@ kv-cache-low-resources/
 ├── requirements.txt
 ├── .gitignore
 ├── docs/
-│   ├── RESULTS.md                                 # Full quantitative tables across Weeks 1–6 (Qwen3 + Llama-3.2)
-│   └── ROADMAP.md                                 # Next experiments (downstream SIB-200 / FLORES translation & paper draft)
+│   ├── RESULTS.md                                 # Full quantitative tables across Weeks 1–7 (Qwen3 + Llama-3.2)
+│   └── ROADMAP.md                                 # Completed milestones & paper checklist
+├── paper/
+│   ├── main.tex                                   # Overleaf-ready ACL/EMNLP-style LaTeX manuscript
+│   ├── references.bib                             # Verified BibTeX bibliography
+│   └── README.md                                  # Overleaf compilation & ARR submission guide
 ├── notebooks/
 │   ├── 01_week1_spectra.ipynb                     # Week 1 (Qwen3): Per-head & joint K/V spectra (NER, r90/95/99)
 │   ├── 02_week1b_subspace_transfer.ipynb          # Week 1b (Qwen3): Cross-lingual subspace overlap & energy transfer
